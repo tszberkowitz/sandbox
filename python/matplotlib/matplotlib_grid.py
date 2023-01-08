@@ -37,3 +37,13 @@ plt.grid(axis='y')
 plt.show()
 
 
+
+# Set line properties of grid lines via the `color=`, `linestyle=`, and `linewidth=` arguments
+plt.title("Sports Watch Data")
+plt.xlabel("Average Pulse")
+plt.ylabel("Calories Burned")
+plt.plot(x, y)
+plt.grid(color = "green", linestyle = "--", linewidth = 0.5)
+plt.show()
+
+
