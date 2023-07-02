@@ -6,9 +6,10 @@ library(jsonlite)
 library(tidyjson)
 library(stringi)
 
-datafolder <- "C:/Users/Ted/Documents/Code/R/QualtricsTools-master/data/Sample Surveys"
-
-qsf_string <- readLines(file.path(datafolder, "Better Sample Survey", "Better_Sample_Survey.qsf"), warn = FALSE)
+# datafolder <- "C:/Users/Ted/Documents/Code/R/QualtricsTools-master/data/Sample Surveys"
+# qsf_string <- readLines(file.path(datafolder, "Better Sample Survey", "Better_Sample_Survey.qsf"), warn = FALSE)
+qsf_string <- readLines("./QualtricsTools-master/data/Sample Surveys/Better Sample Survey/Better_Sample_Survey.qsf", warn = FALSE)
+# qsf_string <- readLines("./Long_Exhaustive_Sample_Survey.qsf", warn = FALSE)
 
 # qsf_string |>
 #   prettify() |>
@@ -31,8 +32,26 @@ nonpayload <- survey_elements |>
 names(survey_elements) <- nonpayload[["PrimaryAttribute"]]
 # glimpse(survey_elements, max.level = 2)
 
+### sprintf("Total number of questions in the survey: %s", nonpayload |> filter(Element == "QC") |> pull(SecondaryAttribute))
 
 survey_blocks <- survey_elements[["Survey Blocks"]]
+# glimpse(survey_blocks, max.level = 2)
+# glimpse(survey_blocks[["Payload"]], max.level = 2)
+# sapply(survey_blocks[["Payload"]], \(x) {x[["Type"]]})
+trash_block_index <- which(sapply(survey_blocks[["Payload"]], \(x) {x[["Type"]] == "Trash"}))
+
+# pluck(survey_blocks, "Payload", 2, "Description")
+# pluck(survey_blocks, "Payload", 2, "BlockElements")
+survey_trash <- pluck(survey_blocks, "Payload", trash_block_index)
+# survey_trash$BlockElements
+# unlist(survey_trash[["BlockElements"]], recursive = FALSE) |> bind_rows()
+
+trash_question_ids <- survey_trash |>
+  pluck("BlockElements") |>
+  unlist(recursive = FALSE) |>
+  bind_rows() |>
+  filter(Type == "Question") |>
+  pull(QuestionID)
 
 survey_questions <- survey_elements[nonpayload |> filter(Element == "SQ") |> pull(PrimaryAttribute)]
 # length(survey_questions)
@@ -52,7 +71,6 @@ survey_question_payloads <- survey_questions |> lapply(\(x) {x[["Payload"]]})
 sqp_meta <- survey_question_payloads |>
   lapply(\(x) {sapply(x, \(y) {is.list(y) && (length(y) > 0L)})}) |>
   bind_rows()
-
 sqp_meta <- sqp_meta |>
   replace_na(
     replace = list(FALSE) %>% rep(ncol(sqp_meta)) %>% setNames(colnames(sqp_meta))
@@ -71,12 +89,33 @@ safe_to_extract <- sapply(sqp_meta, Negate(any))
 sqp_nonlists <- survey_question_payloads |>
   # lapply(\(x) {x[names(which(safe_to_extract))]}) |>
   lapply(\(x) {x[names(which(safe_to_extract))] |> unlist(recursive = FALSE)}) |>
-  bind_rows()
+  bind_rows() |>
+  mutate(
+    question_is_in_trash = QuestionID %in% trash_question_ids
+  )
+glimpse(sqp_nonlists)
 
-# sqp_nonlists <- survey_question_payloads |>
-#   as.data.frame()
+sqp_nonlists |>
+  pull(QuestionText)
+  # pull(QuestionDescription)
 
-sqp_nonlists |> pull(QuestionText)
+sqp_nonlists |>
+  # select(QuestionID, QuestionDescription)
+  select(QuestionID, QuestionText)
+
+table(sqp_nonlists$QuestionType, useNA = "ifany")
+table(sqp_nonlists$Selector, useNA = "ifany")
+table(sqp_nonlists$NumberOfQuestions, useNA = "ifany")
+table(sqp_nonlists$question_is_in_trash, useNA = "ifany")
+
+sqp_nonlists |>
+  # count(Selector, NumberOfQuestions)
+  # count(Selector, SubSelector)
+  # count(Selector, QuestionType)
+  count(QuestionType, Selector, SubSelector)
+
+sqp_nonlists |>
+  filter(QuestionType == "MC")
 
 sqp_lists <- survey_question_payloads |>
   lapply(\(x) {x[names(which(!safe_to_extract))] %>% `[`(which(!is.na(names(.))))})

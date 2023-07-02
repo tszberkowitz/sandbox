@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*~
+.vscode
+*.swp
+inst/doc
+wiki-images
+ScratchWork
