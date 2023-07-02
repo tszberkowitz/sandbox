@@ -6,9 +6,11 @@ library(jsonlite)
 library(tidyjson)
 library(stringi)
 
+setwd("C:/Users/Ted/Documents/GitHub/sandbox/r/qsffiles/QualtricsTools-master/data")
+
 # datafolder <- "C:/Users/Ted/Documents/Code/R/QualtricsTools-master/data/Sample Surveys"
 # qsf_string <- readLines(file.path(datafolder, "Better Sample Survey", "Better_Sample_Survey.qsf"), warn = FALSE)
-qsf_string <- readLines("./QualtricsTools-master/data/Sample Surveys/Better Sample Survey/Better_Sample_Survey.qsf", warn = FALSE)
+qsf_string <- readLines("./Sample Surveys/Better Sample Survey/Better_Sample_Survey.qsf", warn = FALSE)
 # qsf_string <- readLines("./Long_Exhaustive_Sample_Survey.qsf", warn = FALSE)
 
 # qsf_string |>
@@ -20,6 +22,7 @@ qsf <- fromJSON(qsf_string, simplifyVector = FALSE, flatten = FALSE)
 # length(qsf)
 # glimpse(qsf, max.level = 2)
 
+survey_entry <- qsf[["SurveyEntry"]]
 survey_elements <- qsf[["SurveyElements"]]
 # glimpse(survey_elements, max.level = 2)
 # 
@@ -119,31 +122,34 @@ sqp_nonlists |>
 
 sqp_lists <- survey_question_payloads |>
   lapply(\(x) {x[names(which(!safe_to_extract))] %>% `[`(which(!is.na(names(.))))})
+# # if ((length(trash_question_ids) > 0L) && (any(names(sqp_lists) %in% trash_question_ids)))  {
+#   sqp_lists <- sqp_lists[setdiff(names(sqp_lists), trash_question_ids)]
+# # }
 
 length(sqp_lists)
 glimpse(sqp_lists, max.level = 2)
 
-glimpse(sqp_lists[[12]], max.level = 1)
-names(sqp_lists[[12]])
+glimpse(sqp_lists[[length(sqp_lists)]], max.level = 1)
+names(sqp_lists[[length(sqp_lists)]])
 
 lapply(sqp_meta, which)
-glimpse(sqp_lists[[6]], max.level = 1)
-sqp_lists[[6]][["ChoiceDataExportTags"]]
+glimpse(sqp_lists[[5]], max.level = 1)
+sqp_lists[[5]][["ChoiceDataExportTags"]]
 
 
 sqp_lists |>
   lapply(\(x) {x[["Choices"]]})
 
-sqp_lists |>
-  lapply(\(x) {x[["Choices"]] %>% lapply(\(y) {bind_cols(n = names(y), d = y[["Display"]])})})
+# sqp_lists |>
+#   lapply(\(x) {x[["Choices"]] %>% lapply(\(y) {bind_cols(n = names(y), d = y[["Display"]])})})
 
 sqp_lists |>
   lapply(\(x) {x[["Choices"]]}) |>
   lapply(\(x) {coalesce(names(x), NA_character_)})
 
-sqp_lists |>
-  lapply(\(x) {x[["Choices"]]}) |>
-  lapply(\(x) {bind_cols(n = names(x), d = unlist(x, recursive = FALSE)[["Display"]])})
+# sqp_lists |>
+#   lapply(\(x) {x[["Choices"]]}) |>
+#   lapply(\(x) {bind_cols(n = names(x), d = unlist(x, recursive = FALSE)[["Display"]])})
 
 
 sqp_lists |>
@@ -152,13 +158,13 @@ sqp_lists |>
   # lapply(\(x) {x[["Choices"]] |> lapply(\(y) {y[["Display"]] %>%
   #     bind_cols(n = names(.), d = unlist(.))})})
 
-sqp_lists |>
-  lapply(\(x) {x[["Choices"]] |> lapply(\(y) {y[["Display"]] %>% ifelse(length(.) > 0L, ., NA)})})
-sqp_lists |>
-  lapply(\(x) {x[["Choices"]] |> lapply(\(y) {length(y[["Display"]])})})
+# sqp_lists |>
+#   lapply(\(x) {x[["Choices"]] |> lapply(\(y) {y[["Display"]] %>% ifelse(length(.) > 0L, ., NA)})})
+# sqp_lists |>
+#   lapply(\(x) {x[["Choices"]] |> lapply(\(y) {length(y[["Display"]])})})
 
-sqp_lists |>
-  lapply(\(x) {x[["Choices"]] |> lapply(\(y) {unlist(y[["Display"]], recursive = FALSE)})})
+# sqp_lists |>
+#   lapply(\(x) {x[["Choices"]] |> lapply(\(y) {unlist(y[["Display"]], recursive = FALSE)})})
 sqp_lists |>
   lapply(\(x) {x[["Choices"]] |> sapply(\(y) {unlist(y[["Display"]])})})
 
@@ -166,6 +172,29 @@ sqp_lists |>
   lapply(\(x) {x[["Choices"]] |> sapply(\(y) {y[["Display"]]})})
 
 sqp_lists |>
-  lapply(\(x) {x[["Choices"]] |> sapply(\(y) {y[["Display"]] %>% ifelse(length(.) > 0L, ., NA_character_)})})
+  lapply(\(x) {x[["Choices"]] |> sapply(\(y) {y[["Display"]]})}) |>
+  bind_rows()
+
+sqp_lists |>
+  lapply(\(x) {x[["Choices"]] |> sapply(\(y) {y[["Display"]] %>% ifelse(is.null(.) || length(.) == 0L, NA_character_, .)})}) |>
+  bind_rows()
+
+sqp_lists[["QID3"]][["Choices"]]
+
+sqp_lists |>
+  # lapply(\(x) {x[["Choices"]] |> sapply(\(y) {ifelse(is.null(y[["Display"]]) || length(y[["Display"]]) == 0L, NA_character_, y[["Display"]])})}) |>
+  lapply(\(x) {x[["Choices"]] |> sapply(\(y) {if(is.null(y) || length(y[["Display"]]) == 0L) {NA_character_} else {y[["Display"]]}})}) |>
+  bind_rows()
+
+
+
+lapply(sqp_lists, \(x) {x[["ChoiceOrder"]]})
+lapply(sqp_lists, \(x) {unlist(x[["ChoiceOrder"]], recursive = FALSE)})
+lapply(sqp_lists, \(x) {as.character(unlist(x[["ChoiceOrder"]], recursive = FALSE))})
+lapply(sqp_lists, \(x) {y <- as.character(unlist(x[["ChoiceOrder"]], recursive = FALSE)); ifelse(is.null(y) | (length(y) == 0L), NA_character_, y)})
+
+
+
+
 
 
