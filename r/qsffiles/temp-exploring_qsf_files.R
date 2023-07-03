@@ -104,7 +104,8 @@ sqp_nonlists |>
 
 sqp_nonlists |>
   # select(QuestionID, QuestionDescription)
-  select(QuestionID, QuestionText)
+  # select(QuestionID, QuestionText)
+  select(QuestionID, IsTrashed = question_is_in_trash)
 
 table(sqp_nonlists$QuestionType, useNA = "ifany")
 table(sqp_nonlists$Selector, useNA = "ifany")
@@ -118,7 +119,8 @@ sqp_nonlists |>
   count(QuestionType, Selector, SubSelector)
 
 sqp_nonlists |>
-  filter(QuestionType == "MC")
+  filter(QuestionType == "MC") |>
+  select(QuestionID)
 
 sqp_lists <- survey_question_payloads |>
   lapply(\(x) {x[names(which(!safe_to_extract))] %>% `[`(which(!is.na(names(.))))})
@@ -128,6 +130,7 @@ sqp_lists <- survey_question_payloads |>
 
 length(sqp_lists)
 glimpse(sqp_lists, max.level = 2)
+# bind_rows(sqp_lists)
 
 glimpse(sqp_lists[[length(sqp_lists)]], max.level = 1)
 names(sqp_lists[[length(sqp_lists)]])
