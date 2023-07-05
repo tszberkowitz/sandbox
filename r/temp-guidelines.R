@@ -67,26 +67,31 @@ library(tidyverse)
 #     usable height = 2870.0787px - 354.3307px = 2515.7480px
 #     usable width = 1972.4409px - 354.3307px = 1618.1102px
 
-page_width <- set_units(167, "mm")
-page_height <- set_units(243, "mm")
+# units_to_use <- "mm"
+units_to_use <- "in" ### must use "in" instead of "inch" or "inches" because `ggsave()` is stupid
 
-margin_size <- set_units(15, "mm")
+# page_width <- set_units(167, "mm") |> set_units(units_to_use, mode = "standard")
+# page_height <- set_units(243, "mm") |> set_units(units_to_use, mode = "standard")
+page_width <- set_units(8.5, "inch")
+page_height <- set_units(11, "inch")
+
+margin_size <- set_units(15, "mm") |> set_units(units_to_use, mode = "standard")
 
 # resolution <- 300 # pixels per inch
 resolution <- set_units(300, "pixel/inch")
 
-# set_units(300, "px")
-
-page_width
-page_width |> set_units("in")
-page_width |> set_units("in") * 300
-# page_width |> set_units("in") * set_units(300, "pixel/inch")
-# page_height |> set_units("in") * set_units(300, "pixel/inch")
-# page_width |> set_units("in") * resolution
-# page_height |> set_units("in") * resolution
-
-page_width * resolution
-page_height * resolution
+# # set_units(300, "px")
+# 
+# page_width
+# page_width |> set_units("in")
+# page_width |> set_units("in") * 300
+# # page_width |> set_units("in") * set_units(300, "pixel/inch")
+# # page_height |> set_units("in") * set_units(300, "pixel/inch")
+# # page_width |> set_units("in") * resolution
+# # page_height |> set_units("in") * resolution
+# 
+# page_width * resolution
+# page_height * resolution
 
 # x <- valid_udunits()
 # 
@@ -114,17 +119,17 @@ page_height * resolution
 
 
 
-usable_width <- page_width - (2 * margin_size)
-usable_height <- page_height - (2 * margin_size)
+usable_width <- page_width - (2 * margin_size) |> set_units(units_to_use, mode = "standard")
+usable_height <- page_height - (2 * margin_size) |> set_units(units_to_use, mode = "standard")
 
-line_height <- set_units(19.0, "mm")
+line_height <- set_units(19.0, "mm") |> set_units(units_to_use, mode = "standard")
 line_height_half <- line_height / 2
 
 
 
 # space_between_lines <- set_units(12.6, "mm")
 # space_between_lines <- set_units(12.0, "mm")
-space_between_lines <- set_units(11.0, "mm")
+space_between_lines <- set_units(11.0, "mm") |> set_units(units_to_use, mode = "standard")
 
 chunk_height <- line_height + space_between_lines
 
@@ -134,58 +139,58 @@ chunk_height <- line_height + space_between_lines
 # # OR
 # # (x+1)line_height + x*space_between_lines + 2*margin_size <= page_height
 
-# trunc(usable_height / chunk_height)*chunk_height + line_height
-# usable_height
-page_height / chunk_height
-trunc(page_height / chunk_height)*chunk_height + line_height
-
-page_height - (trunc(page_height / chunk_height)*chunk_height + line_height)
-page_height - (6*chunk_height + line_height)
-page_height - (7*chunk_height + line_height)
-
-page_height - 8*line_height - 7*space_between_lines #- 2*margin_size
-
-margin_size_tb <- (page_height - 8*line_height - 7*space_between_lines) / 2
-margin_size_lr <- margin_size
-
-
-top_left_x_header <- margin_size_lr
-top_left_y_header <- page_height - margin_size_tb
-
-top_right_x_header <- page_width - margin_size_lr
-top_right_y_header <- top_left_y_header
-
-top_left_x_footer <- margin_size_lr
-top_left_y_footer <- page_height - margin_size_tb - line_height
-
-top_right_x_footer <- page_width - margin_size_lr
-top_right_y_footer <- top_left_y_footer
-
-top_left_x_middle <- margin_size_lr
-top_left_y_middle <- page_height - margin_size_tb - line_height_half
-
-top_right_x_middle <- page_width - margin_size_lr
-top_right_y_middle <- top_left_y_middle
-
-
-
-
-page_height / chunk_height
-trunc(page_height / chunk_height)*chunk_height + line_height
-page_height
-(which.min(((0:30 * chunk_height) + line_height) < page_height) - 1) * chunk_height + line_height
-
-multiples <- 0:30
-multiples[which.min(((multiples * chunk_height) + line_height) < page_height) - 1L] * chunk_height + line_height
-
-baselines_y <- multiples * chunk_height
-baselines_y < page_height
-baselines_y[which.min(baselines_y < page_height) - 1L] + line_height
-page_height - (baselines_y[which.min(baselines_y < page_height) - 1L] + line_height)
+# # trunc(usable_height / chunk_height)*chunk_height + line_height
+# # usable_height
+# page_height / chunk_height
+# trunc(page_height / chunk_height)*chunk_height + line_height
+# 
+# page_height - (trunc(page_height / chunk_height)*chunk_height + line_height)
+# page_height - (6*chunk_height + line_height)
+# page_height - (7*chunk_height + line_height)
+# 
+# page_height - 8*line_height - 7*space_between_lines #- 2*margin_size
+# 
+# margin_size_tb <- (page_height - 8*line_height - 7*space_between_lines) / 2
+# margin_size_lr <- margin_size
+# 
+# 
+# top_left_x_header <- margin_size_lr
+# top_left_y_header <- page_height - margin_size_tb
+# 
+# top_right_x_header <- page_width - margin_size_lr
+# top_right_y_header <- top_left_y_header
+# 
+# top_left_x_footer <- margin_size_lr
+# top_left_y_footer <- page_height - margin_size_tb - line_height
+# 
+# top_right_x_footer <- page_width - margin_size_lr
+# top_right_y_footer <- top_left_y_footer
+# 
+# top_left_x_middle <- margin_size_lr
+# top_left_y_middle <- page_height - margin_size_tb - line_height_half
+# 
+# top_right_x_middle <- page_width - margin_size_lr
+# top_right_y_middle <- top_left_y_middle
 
 
 
-zero <- set_units(0, "mm")
+
+# page_height / chunk_height
+# trunc(page_height / chunk_height)*chunk_height + line_height
+# page_height
+# (which.min(((0:30 * chunk_height) + line_height) < page_height) - 1) * chunk_height + line_height
+# 
+# multiples <- 0:30
+# multiples[which.min(((multiples * chunk_height) + line_height) < page_height) - 1L] * chunk_height + line_height
+# 
+# baselines_y <- multiples * chunk_height
+# baselines_y < page_height
+# baselines_y[which.min(baselines_y < page_height) - 1L] + line_height
+# page_height - (baselines_y[which.min(baselines_y < page_height) - 1L] + line_height)
+
+
+
+zero <- set_units(0, "mm") |> set_units(units_to_use, mode = "standard")
 line_locations <- tibble(line_number = 1:30) |>
   mutate(
     multiple = line_number - 1L,
@@ -205,10 +210,10 @@ line_locations <- tibble(line_number = 1:30) |>
   # mutate(
   #   total_lines = max(line_number)
   )
-# line_locations
-# glimpse(line_locations)
-sapply(line_locations, is.unit)
-sapply(line_locations, \(x) {inherits(x, "units")})
+# # line_locations
+# # glimpse(line_locations)
+# sapply(line_locations, is.unit)
+# sapply(line_locations, \(x) {inherits(x, "units")})
 
 occupied_height <- with(line_locations, max(y_headline) - min(y_baseline))
 unused_height <- page_height - occupied_height
@@ -235,6 +240,7 @@ plot_coordinates <- line_coordinates |>
       .default = "dotted"
     )
   )
+print(plot_coordinates, n = 50)
 
 guidelines_sheet <- plot_coordinates |>
   ggplot(
@@ -247,99 +253,102 @@ guidelines_sheet <- plot_coordinates |>
   ) +
   theme_void() +
   geom_segment(linetype = plot_coordinates[["linetype"]], colour = "black")
+guidelines_sheet
+
+# # ggsave(filename = "C:/Users/Ted/Documents/GitHub/sandbox/r/guidelines.svg", plot = guidelines_sheet, device = "svg")
+# # ggsave(filename = "C:/Users/Ted/Documents/GitHub/sandbox/r/guidelines.svg", plot = guidelines_sheet, device = "svg", width = page_width, height = page_height)
+# ggsave(filename = "C:/Users/Ted/Documents/GitHub/sandbox/r/guidelines.svg", plot = guidelines_sheet, device = "svg", width = unclass(page_width), height = unclass(page_height), units = "mm")
+# ggsave(filename = "C:/Users/Ted/Documents/GitHub/sandbox/r/guidelines.png", plot = guidelines_sheet, device = "png", width = unclass(page_width), height = unclass(page_height), units = "mm")
+
+ggsave(filename = "C:/Users/Ted/Documents/GitHub/sandbox/r/guidelines.svg", plot = guidelines_sheet, device = "svg", width = as.numeric(page_width), height = as.numeric(page_height), units = units_to_use)
+ggsave(filename = "C:/Users/Ted/Documents/GitHub/sandbox/r/guidelines.png", plot = guidelines_sheet, device = "png", width = as.numeric(page_width), height = as.numeric(page_height), units = units_to_use)
 
 
-# ggsave(filename = "C:/Users/Ted/Documents/GitHub/sandbox/r/guidelines.svg", plot = guidelines_sheet, device = "svg")
-# ggsave(filename = "C:/Users/Ted/Documents/GitHub/sandbox/r/guidelines.svg", plot = guidelines_sheet, device = "svg", width = page_width, height = page_height)
-ggsave(filename = "C:/Users/Ted/Documents/GitHub/sandbox/r/guidelines.svg", plot = guidelines_sheet, device = "svg", width = unclass(page_width), height = unclass(page_height), units = "mm")
-
-
-
-# guidelines <- tribble(
-#   ~role, ~x, ~y
-# )
-
-page_width <- unit(167, "mm")
-page_height <- unit(243, "mm")
-
-margin_size <- unit(15, "mm")
-
-# resolution <- 300 # pixels per inch
-
-page_width
-# page_width |> convertWidth("in")
-# page_width |> convertX("in")
-
-
-usable_width <- page_width - (2 * margin_size)
-usable_height <- page_height - (2 * margin_size)
-
-line_height <- unit(19.0, "mm")
-line_height_half <- line_height / 2
-
-# space_between_lines <- unit(12.6, "mm")
-# space_between_lines <- unit(12.0, "mm")
-space_between_lines <- unit(11.0, "mm")
-
-chunk_height <- line_height + space_between_lines
-
-baselines_y <- 0:20 * chunk_height
-midlines_y <- baselines_y + line_height_half
-headlines_y <- baselines_y + line_height
-
-headlines_y >= page_height
-which.max(headlines_y >= page_height)
-which.min(baselines_y <= page_height)
-
-baselines_y >= page_height
-headlines_y >= page_height
-
-baselines_y < page_height
-headlines_y < page_height
-
-(baselines_y < page_height) & (headlines_y < page_height)
-
-trunc(unclass(page_height) / unclass(chunk_height))
-
-
-# usable_height / chunk_height
+# # guidelines <- tribble(
+# #   ~role, ~x, ~y
+# # )
 # 
-# # (x+1)line_height + x*space_between_lines <= usable_height
-# # OR
-# # (x+1)line_height + x*space_between_lines + 2*margin_size <= page_height
-
-# trunc(usable_height / chunk_height)*chunk_height + line_height
-# usable_height
-trunc(page_height / chunk_height)*chunk_height + line_height
-page_height
-
-page_height - (trunc(page_height / chunk_height)*chunk_height + line_height)
-page_height - (6*chunk_height + line_height)
-page_height - (7*chunk_height + line_height)
-
-page_height - 8*line_height - 7*space_between_lines #- 2*margin_size
-
-margin_size_tb <- (page_height - 8*line_height - 7*space_between_lines) / 2
-margin_size_lr <- margin_size
-
-
-top_left_x_header <- margin_size_lr
-top_left_y_header <- page_height - margin_size_tb
-
-top_right_x_header <- page_width - margin_size_lr
-top_right_y_header <- top_left_y_header
-
-top_left_x_footer <- margin_size_lr
-top_left_y_footer <- page_height - margin_size_tb - line_height
-
-top_right_x_footer <- page_width - margin_size_lr
-top_right_y_footer <- top_left_y_footer
-
-top_left_x_middle <- margin_size_lr
-top_left_y_middle <- page_height - margin_size_tb - line_height_half
-
-top_right_x_middle <- page_width - margin_size_lr
-top_right_y_middle <- top_left_y_middle
+# page_width <- unit(167, "mm")
+# page_height <- unit(243, "mm")
+# 
+# margin_size <- unit(15, "mm")
+# 
+# # resolution <- 300 # pixels per inch
+# 
+# page_width
+# # page_width |> convertWidth("in")
+# # page_width |> convertX("in")
+# 
+# 
+# usable_width <- page_width - (2 * margin_size)
+# usable_height <- page_height - (2 * margin_size)
+# 
+# line_height <- unit(19.0, "mm")
+# line_height_half <- line_height / 2
+# 
+# # space_between_lines <- unit(12.6, "mm")
+# # space_between_lines <- unit(12.0, "mm")
+# space_between_lines <- unit(11.0, "mm")
+# 
+# chunk_height <- line_height + space_between_lines
+# 
+# baselines_y <- 0:20 * chunk_height
+# midlines_y <- baselines_y + line_height_half
+# headlines_y <- baselines_y + line_height
+# 
+# headlines_y >= page_height
+# which.max(headlines_y >= page_height)
+# which.min(baselines_y <= page_height)
+# 
+# baselines_y >= page_height
+# headlines_y >= page_height
+# 
+# baselines_y < page_height
+# headlines_y < page_height
+# 
+# (baselines_y < page_height) & (headlines_y < page_height)
+# 
+# trunc(unclass(page_height) / unclass(chunk_height))
+# 
+# 
+# # usable_height / chunk_height
+# # 
+# # # (x+1)line_height + x*space_between_lines <= usable_height
+# # # OR
+# # # (x+1)line_height + x*space_between_lines + 2*margin_size <= page_height
+# 
+# # trunc(usable_height / chunk_height)*chunk_height + line_height
+# # usable_height
+# trunc(page_height / chunk_height)*chunk_height + line_height
+# page_height
+# 
+# page_height - (trunc(page_height / chunk_height)*chunk_height + line_height)
+# page_height - (6*chunk_height + line_height)
+# page_height - (7*chunk_height + line_height)
+# 
+# page_height - 8*line_height - 7*space_between_lines #- 2*margin_size
+# 
+# margin_size_tb <- (page_height - 8*line_height - 7*space_between_lines) / 2
+# margin_size_lr <- margin_size
+# 
+# 
+# top_left_x_header <- margin_size_lr
+# top_left_y_header <- page_height - margin_size_tb
+# 
+# top_right_x_header <- page_width - margin_size_lr
+# top_right_y_header <- top_left_y_header
+# 
+# top_left_x_footer <- margin_size_lr
+# top_left_y_footer <- page_height - margin_size_tb - line_height
+# 
+# top_right_x_footer <- page_width - margin_size_lr
+# top_right_y_footer <- top_left_y_footer
+# 
+# top_left_x_middle <- margin_size_lr
+# top_left_y_middle <- page_height - margin_size_tb - line_height_half
+# 
+# top_right_x_middle <- page_width - margin_size_lr
+# top_right_y_middle <- top_left_y_middle
 
 
 
