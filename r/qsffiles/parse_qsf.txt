@@ -1,0 +1,68 @@
+$qsf = Get-Content -Raw -Path "C:\Users\Ted\Documents\GitHub\sandbox\r\qsffiles\QualtricsTools-master\data\Sample Surveys\Better Sample Survey\Better_Sample_Survey.qsf"
+$json = $qsf | ConvertFrom-Json
+
+$survey_entry = $json.SurveyEntry
+$survey_elements = $json.SurveyElements
+
+$survey_elements.Element
+$survey_elements | Format-Table -Property Element, PrimaryAttribute
+$survey_elements | Format-Table -Property Element, PrimaryAttribute, SecondaryAttribute, TertiaryAttribute
+
+$survey_elements.Where({ $_.Element -ceq 'QC' })
+$survey_elements.Where({ $_.Element -ceq 'QC' }).ForEach({ "The survey '$($survey_entry.SurveyName)' contains $($_.SecondaryAttribute) questions." })
+
+$survey_blocks = $survey_elements.Where({ $_.Element -ceq 'BL' }).Payload
+$survey_flows = $survey_elements.Where({ $_.Element -ceq 'FL' }).Payload
+$survey_options = $survey_elements.Where({ $_.Element -ceq 'SO' }).Payload
+$survey_questions = $survey_elements.Where({ $_.Element -ceq 'SQ' }).Payload
+
+$survey_questions.Count
+$survey_questions | Get-Member
+
+$survey_questions.DataExportTag
+$survey_questions.DefaultChoices
+$survey_questions.NumberOfQuestions
+$survey_questions.QuestionID
+$survey_questions.QuestionText
+$survey_questions.QuestionDescription
+$survey_questions.QuestionType
+$survey_questions.Selector
+$survey_questions.Validation
+
+
+$survey_blocks | Get-Member
+$survey_blocks.Description
+$survey_blocks.Type
+$trash_question_ids = $survey_blocks.Where({ $_.Type -ceq 'Trash' }).BlockElements.Where({ $_.Type -ceq 'Question' }).QuestionID
+
+$survey_questions_clean = $survey_questions.Where({ $trash_question_ids -inotcontains $_.QuestionID })
+
+$survey_questions_clean.AdditionalQuestions
+$survey_questions_clean.ChoiceDataExportTags
+$survey_questions_clean.ChoiceOrder
+$survey_questions_clean.Choices
+$survey_questions_clean.RecodeValues
+$survey_questions_clean.Configuration
+$survey_questions_clean.DataExportTag
+$survey_questions_clean.DefaultChoices
+$survey_questions_clean.NumberOfQuestions
+$survey_questions_clean.QuestionID
+$survey_questions_clean.QuestionText
+$survey_questions_clean.QuestionDescription
+$survey_questions_clean.QuestionType
+$survey_questions_clean.Selector
+$survey_questions_clean.Validation
+
+$survey_questions_clean | Format-Table -AutoSize -Property QuestionID, QuestionText
+$survey_questions_clean | Format-Table -AutoSize -Property QuestionID, QuestionType, Selector
+
+$survey_questions_clean | Format-Table -AutoSize -Property QuestionID, @{Name='QuestionDescriptionOption'; Expression={$_.Configuration.QuestionDescriptionOption}}, @{Name='RepeatHeaders'; Expression={$_.Configuration.RepeatHeaders}}
+
+$survey_questions_clean | Format-Table -AutoSize -Property QuestionID, DataExportTag, QuestionType, Selector, @{Name='QuestionDescriptionOption'; Expression={$_.Configuration.QuestionDescriptionOption}}, @{Name='RepeatHeaders'; Expression={$_.Configuration.RepeatHeaders}}, QuestionText, QuestionDescription
+
+$survey_questions_clean | Format-List
+
+$survey_questions_clean.AdditionalQuestions | Format-List
+$survey_questions_clean.ChoiceOrder | Format-List
+$survey_questions_clean.Choices | Format-List
+
