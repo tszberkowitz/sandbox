@@ -1,0 +1,90 @@
+let
+    Source = Json.Document(File.Contents("C:\Users\Ted\Documents\GitHub\sandbox\r\qsffiles\QualtricsTools-master\data\Sample Surveys\Better Sample Survey\Better_Sample_Survey.qsf")),
+    SurveyElements1 = Source[SurveyElements],
+    SurveyElements_0 = Table.ExpandRecordColumn(SurveyElements1, "SurveyElements", {"SurveyID", "Element", "PrimaryAttribute", "SecondaryAttribute", "TertiaryAttribute", "Payload"})
+in
+    SurveyElements_0
+
+
+/* Modified on 2023-07-08 from https://stackoverflow.com/a/60421392 */
+let
+    Source = Json.Document(File.Contents("C:\Users\Ted\Documents\GitHub\sandbox\r\qsffiles\QualtricsTools-master\data\Sample Surveys\Better Sample Survey\Better_Sample_Survey.qsf")),
+    SurveyElements1 = Table.FromList(Source[SurveyElements], Splitter.SplitByNothing()),
+    SurveyElements2 = Table.ExpandRecordColumn(SurveyElements1, "Column1", {"SurveyID", "Element", "PrimaryAttribute", "SecondaryAttribute", "TertiaryAttribute", "Payload"}, {"SurveyID", "Element", "PrimaryAttribute", "SecondaryAttribute", "TertiaryAttribute", "Payload"})
+in
+    SurveyElements2
+
+
+/* Modified on 2023-07-08 from https://stackoverflow.com/a/60421392 */
+let
+    Source = Json.Document(File.Contents("C:\Users\Ted\Documents\GitHub\sandbox\r\qsffiles\QualtricsTools-master\data\Sample Surveys\Better Sample Survey\Better_Sample_Survey.qsf")),
+    SurveyElements1 = Table.FromList(Source[SurveyElements], Splitter.SplitByNothing()),
+    SurveyElements2 = Table.ExpandRecordColumn(SurveyElements1, "Column1", {"SurveyID", "Element", "PrimaryAttribute", "SecondaryAttribute", "TertiaryAttribute", "Payload"}, {"SurveyID", "Element", "PrimaryAttribute", "SecondaryAttribute", "TertiaryAttribute", "Payload"})
+in
+    SurveyElements2
+
+
+
+
+/* To get QuestionIDs of questions in trash */
+let
+    Source = Json.Document(File.Contents("C:\Users\Ted\Documents\GitHub\sandbox\r\qsffiles\QualtricsTools-master\data\Sample Surveys\Better Sample Survey\Better_Sample_Survey.qsf")),
+    SurveyElements1 = Table.FromList(Source[SurveyElements], Splitter.SplitByNothing()),
+    SurveyElements2 = Table.ExpandRecordColumn(SurveyElements1, "Column1", {"SurveyID", "Element", "PrimaryAttribute", "SecondaryAttribute", "TertiaryAttribute", "Payload"}, {"SurveyID", "Element", "PrimaryAttribute", "SecondaryAttribute", "TertiaryAttribute", "Payload"}),
+    SurveyBlocks = Table.SelectRows(SurveyElements2, each [Element] = "BL"),
+    SurveyBlocksPayload = Table.ExpandListColumn(SurveyBlocks, "Payload"),
+    SurveyBlocksPayloadPayload = Table.ExpandRecordColumn(SurveyBlocksPayload, "Payload", {"Type", "Description", "ID", "BlockElements"}),
+    SurveyBlocks_Trash = Table.SelectRows(SurveyBlocksPayloadPayload, each [Type] = "Trash"),
+    SurveyBlocks_Trash2 = Table.ExpandListColumn(Table.SelectColumns(SurveyBlocks_Trash, {"BlockElements"}), "BlockElements"),
+    SurveyBlocks_Trash3 = Table.ExpandRecordColumn(SurveyBlocks_Trash2, "BlockElements", {"Type", "QuestionID"}),
+    SurveyBlocks_Trash_IDs = Table.SelectColumns(SurveyBlocks_Trash3, {"QuestionID"})
+in
+    SurveyBlocks_Trash_IDs
+
+
+
+/* To add a new column with the row numbers (starting at 1, incrementing by 1 */
+/* NB: Default initial value for index column is 0 */
+let
+    Source = Json.Document(File.Contents("C:\Users\Ted\Documents\GitHub\sandbox\r\qsffiles\QualtricsTools-master\data\Sample Surveys\Better Sample Survey\Better_Sample_Survey.qsf")),
+    SurveyElements1 = Table.FromList(Source[SurveyElements], Splitter.SplitByNothing()),
+    SurveyElements2 = Table.ExpandRecordColumn(SurveyElements1, "Column1", {"SurveyID", "Element", "PrimaryAttribute", "SecondaryAttribute", "TertiaryAttribute", "Payload"}, {"SurveyID", "Element", "PrimaryAttribute", "SecondaryAttribute", "TertiaryAttribute", "Payload"}),
+    SurveyBlocks = Table.SelectRows(SurveyElements2, each [Element] = "BL"),
+    SurveyBlocksPayload = Table.ExpandListColumn(SurveyBlocks, "Payload"),
+    SurveyBlocksPayloadPayload = Table.ExpandRecordColumn(SurveyBlocksPayload, "Payload", {"Type", "Description", "ID", "BlockElements"}),
+    SurveyBlocks_FirstQuestionBlock = Table.ExpandRecordColumn(Table.ExpandListColumn(Table.SelectColumns(Table.SelectRows(SurveyBlocksPayloadPayload, each [Type] = "Default"), "BlockElements"), "BlockElements"), "BlockElements", {"Type", "QuestionID", "SkipLogic"}),
+    SurveyBlocks_FirstQuestionBlock2 = Table.AddIndexColumn(SurveyBlocks_FirstQuestionBlock, "QuestionDisplayOrder", 1)
+in
+    SurveyBlocks_FirstQuestionBlock2
+
+
+
+
+/* To extract skip logic */
+let
+    Source = Json.Document(File.Contents("C:\Users\Ted\Documents\GitHub\sandbox\r\qsffiles\QualtricsTools-master\data\Sample Surveys\Better Sample Survey\Better_Sample_Survey.qsf")),
+    SurveyElements1 = Table.FromList(Source[SurveyElements], Splitter.SplitByNothing()),
+    SurveyElements2 = Table.ExpandRecordColumn(SurveyElements1, "Column1", {"SurveyID", "Element", "PrimaryAttribute", "SecondaryAttribute", "TertiaryAttribute", "Payload"}, {"SurveyID", "Element", "PrimaryAttribute", "SecondaryAttribute", "TertiaryAttribute", "Payload"}),
+    SurveyBlocks = Table.SelectRows(SurveyElements2, each [Element] = "BL"),
+    SurveyBlocksPayload = Table.ExpandListColumn(SurveyBlocks, "Payload"),
+    SurveyBlocksPayloadPayload = Table.ExpandRecordColumn(SurveyBlocksPayload, "Payload", {"Type", "Description", "ID", "BlockElements"}),
+    SurveyBlocks_FirstQuestionBlock = Table.ExpandRecordColumn(Table.ExpandListColumn(Table.SelectColumns(Table.SelectRows(SurveyBlocksPayloadPayload, each [Type] = "Default"), "BlockElements"), "BlockElements"), "BlockElements", {"Type", "QuestionID", "SkipLogic"}),
+    SurveyBlocks_FirstQuestionBlock2 = Table.AddIndexColumn(SurveyBlocks_FirstQuestionBlock, "QuestionDisplayOrder", 1, 1, type number),
+    SkipLogic = Table.ExpandRecordColumn(Table.ExpandListColumn(Table.SelectRows(Table.SelectColumns(SurveyBlocks_FirstQuestionBlock2, {"SkipLogic"}), each [SkipLogic] is list), "SkipLogic"), "SkipLogic", {"SkipLogicID", "ChoiceLocator", "Condition", "SkipToDestination", "Locator", "SkipToDescription", "Description", "QuestionID"})
+in
+    SkipLogic
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
