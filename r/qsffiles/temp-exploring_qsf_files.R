@@ -10,12 +10,14 @@ setwd("C:/Users/Ted/Documents/GitHub/sandbox/r/qsffiles/QualtricsTools-master/da
 
 # datafolder <- "C:/Users/Ted/Documents/Code/R/QualtricsTools-master/data/Sample Surveys"
 # qsf_string <- readLines(file.path(datafolder, "Better Sample Survey", "Better_Sample_Survey.qsf"), warn = FALSE)
-qsf_string <- readLines("./Sample Surveys/Better Sample Survey/Better_Sample_Survey.qsf", warn = FALSE)
+# qsf_string <- readLines("./Sample Surveys/Better Sample Survey/Better_Sample_Survey.qsf", warn = FALSE)
 # qsf_string <- readLines("./Long_Exhaustive_Sample_Survey.qsf", warn = FALSE)
+qsf_string <- readLines("./Sample Surveys/Many Different Question Types/Sample_Survey.qsf", warn = FALSE)
 
 # qsf_string |>
 #   prettify() |>
 #   writeLines(con = file.path(datafolder, "Better Sample Survey", "Better_Sample_Survey_prettified.qsf"))
+# writeLines(prettify(qsf_string), "./Sample Surveys/Many Different Question Types/Sample_Survey_prettified.json")
 
 qsf <- fromJSON(qsf_string, simplifyVector = FALSE, flatten = FALSE)
 
@@ -51,7 +53,7 @@ survey_trash <- pluck(survey_blocks, "Payload", trash_block_index)
 
 trash_question_ids <- survey_trash |>
   pluck("BlockElements") |>
-  unlist(recursive = FALSE) |>
+  # unlist(recursive = FALSE) |>
   bind_rows() |>
   filter(Type == "Question") |>
   pull(QuestionID)
@@ -64,12 +66,14 @@ payloads <- survey_elements |>
   lapply(\(x) {x[["Payload"]]})
 # length(payloads)
 # glimpse(payloads, max.level = 2)
+# map(survey_elements, "Payload")
 
 survey_question_payloads <- survey_questions |> lapply(\(x) {x[["Payload"]]})
 # glimpse(survey_question_payloads, max.level = 2)
 # 
 # # lapply(survey_question_payloads, \(x) {is.list(x) && (length(x) > 0L)})
 # lapply(survey_question_payloads, \(x) {sapply(x, \(y) {is.list(y) && (length(y) > 0L)})})
+# map(survey_questions, "Payload")
 
 sqp_meta <- survey_question_payloads |>
   lapply(\(x) {sapply(x, \(y) {is.list(y) && (length(y) > 0L)})}) |>
@@ -97,10 +101,24 @@ sqp_nonlists <- survey_question_payloads |>
     question_is_in_trash = QuestionID %in% trash_question_ids
   )
 glimpse(sqp_nonlists)
+table(sqp_nonlists$question_is_in_trash, useNA = "ifany")
 
 sqp_nonlists |>
   pull(QuestionText)
   # pull(QuestionDescription)
+
+# sqp_nonlists |>
+#   pull(QuestionText) |>
+#   # rvest::html_text2()
+#   rvest:::html_text_block()
+
+tempfun <- function(x) paste0("<p>", paste0(x, collapse = "<br /></p><p>"), "</p>")
+sqp_nonlists |>
+  pull(QuestionText) |>
+  tempfun() |>
+  rvest::read_html() |>
+  rvest::html_text() |>
+  cat()
 
 sqp_nonlists |>
   # select(QuestionID, QuestionDescription)
