@@ -10,9 +10,9 @@ setwd("C:/Users/Ted/Documents/GitHub/sandbox/r/qsffiles/QualtricsTools-master/da
 
 # datafolder <- "C:/Users/Ted/Documents/Code/R/QualtricsTools-master/data/Sample Surveys"
 # qsf_string <- readLines(file.path(datafolder, "Better Sample Survey", "Better_Sample_Survey.qsf"), warn = FALSE)
-# qsf_string <- readLines("./Sample Surveys/Better Sample Survey/Better_Sample_Survey.qsf", warn = FALSE)
+qsf_string <- readLines("./Sample Surveys/Better Sample Survey/Better_Sample_Survey.qsf", warn = FALSE)
 # qsf_string <- readLines("./Long_Exhaustive_Sample_Survey.qsf", warn = FALSE)
-qsf_string <- readLines("./Sample Surveys/Many Different Question Types/Sample_Survey.qsf", warn = FALSE)
+# qsf_string <- readLines("./Sample Surveys/Many Different Question Types/Sample_Survey.qsf", warn = FALSE)
 
 # qsf_string |>
 #   prettify() |>
@@ -20,6 +20,7 @@ qsf_string <- readLines("./Sample Surveys/Many Different Question Types/Sample_S
 # writeLines(prettify(qsf_string), "./Sample Surveys/Many Different Question Types/Sample_Survey_prettified.json")
 
 qsf <- fromJSON(qsf_string, simplifyVector = FALSE, flatten = FALSE)
+qsf2 <- fromJSON(qsf_string)
 
 # length(qsf)
 # glimpse(qsf, max.level = 2)
@@ -217,5 +218,137 @@ lapply(sqp_lists, \(x) {y <- as.character(unlist(x[["ChoiceOrder"]], recursive =
 
 
 
+
+
+
+qsf_files <- list.files(
+  path = "C:/Users/Ted/Documents/GitHub/sandbox/r/qsffiles/QualtricsTools-master/data/Sample Surveys",
+  pattern = "*.qsf",
+  full.names = TRUE,
+  recursive = TRUE
+)
+qsf_list <- vector(mode = "list", length = length(qsf_files))
+names(qsf_list) <- tools::file_path_sans_ext(basename(qsf_files))
+for (i in seq_along(qsf_list)) {
+  qsf_list[[i]][["filepath"]] <- qsf_files[i]
+  qsf_list[[i]][["qsf_string"]] <- readLines(qsf_files[i], warn = FALSE)
+  # qsf_list[[i]][["json"]] <- jsonlite::fromJSON(txt = qsf_list[[i]][["qsf_string"]], simplifyVector = FALSE, flatten = FALSE)
+  qsf_list[[i]][["json"]] <- jsonlite::fromJSON(txt = qsf_files[i], simplifyVector = FALSE, flatten = FALSE)
+}
+rm(i)
+
+glimpse(qsf_list, max.level = 2)
+
+qsf_tidy <- qsf_list[["Better_Sample_Survey"]][["filepath"]] |>
+  read_json(format = "json")
+
+qsf_tidy
+qsf_tidy |>
+  gather_object()
+
+survey_entry <- qsf_tidy |>
+  gather_object("name") |>
+  filter(name == "SurveyEntry")
+
+survey_entry <- qsf_tidy |>
+  # gather_object("name") |>
+  spread_values(
+    SurveyID = jstring(SurveyEntry, SurveyID),
+    SurveyName = jstring(SurveyEntry, SurveyName),
+    SurveyDescription = jstring(SurveyEntry, SurveyDescription),
+    SurveyOwnerID = jstring(SurveyEntry, SurveyOwnerID),
+    SurveyBrandID = jstring(SurveyEntry, SurveyBrandID),
+    DivisionID = jstring(SurveyEntry, DivisionID),
+    SurveyLanguage = jstring(SurveyEntry, SurveyLanguage),
+    SurveyActiveResponseSet = jstring(SurveyEntry, SurveyActiveResponseSet),
+    SurveyStatus = jstring(SurveyEntry, SurveyStatus),
+    SurveyStartDate = jstring(SurveyEntry, SurveyStartDate),
+    SurveyExpirationDate = jstring(SurveyEntry, SurveyExpirationDate),
+    SurveyCreationDate = jstring(SurveyEntry, SurveyCreationDate),
+    CreatorID = jstring(SurveyEntry, CreatorID),
+    LastModified = jstring(SurveyEntry, LastModified),
+    LastAccessed = jstring(SurveyEntry, LastAccessed),
+    LastActivated = jstring(SurveyEntry, LastActivated),
+    Deleted = jstring(SurveyEntry, Deleted)
+  ) |> #glimpse()
+  gather_object("name") |>
+  filter(name == "SurveyElements") |>
+  select(-name) |>
+  gather_array("name")
+
+survey_elements <- survey_entry |>
+  select(name) |>
+#  gather_object("name2")
+  spread_values(
+    SurveyID = jstring(SurveyID),
+    Element = jstring(Element),
+    PrimaryAttribute = jstring(PrimaryAttribute),
+    SecondaryAttribute = jstring(SecondaryAttribute),
+    TertiaryAttribute = jstring(TertiaryAttribute)
+  )
+
+payloads <- survey_elements |>
+  gather_object("name2") |>
+  filter(name2 == "Payload") |>
+  select(-name2)
+
+payloads_simple <- payloads |>
+  filter(Element == "BL") |>
+  gather_array("SurveyBlockNumber") |>
+  select(-c(Element, SecondaryAttribute, TertiaryAttribute)) |>
+  # gather_object("name2")
+  spread_values(
+    SurveyBlockType = jstring(Type),
+    SurveyBlockDescription = jstring(Description),
+    SurveyBlockID = jstring(ID)
+  ) |>
+  enter_object(BlockElements) |>
+  gather_array("SurveyBlockElementNumber") |>
+  # gather_object()
+  spread_values(
+    SurveyBlockElementType = jstring(Type),
+    QuestionID = jstring(QuestionID)#,
+    # SkipLogic.SkipLogicID = jstring(SkipLogic, SkipLogicID),
+    # SkipLogic.ChoiceLocator = jstring(SkipLogic, ChoiceLocator),
+    # SkipLogic.Condition = jstring(SkipLogic, Condition),
+    # SkipLogic.SkipToDestination = jstring(SkipLogic, SkipToDestination),
+    # SkipLogic.Locator = jstring(SkipLogic, Locator),
+    # SkipLogic.SkipToDescription = jstring(SkipLogic, SkipToDescription),
+    # SkipLogic.Description = jstring(SkipLogic, Description),
+    # SkipLogic.QuestionID = jstring(SkipLogic, QuestionID)
+  ) #|> #glimpse()
+
+payloads_simple |>
+  gather_object("SurveyBlockElementSubtype") |>
+  filter(SurveyBlockElementSubtype == "SkipLogic") |>
+  select(-c(PrimaryAttribute, SurveyBlockType, SurveyBlockDescription, SurveyBlockElementType, SurveyBlockElementSubtype)) |>
+  gather_array("SkipLogicArrayIndex") |> #glimpse()
+  gather_object("SkipLogic") |> #glimpse()
+  select(SkipLogic)
+
+payloads_simple |>
+  gather_object("SurveyBlockElementSubtype") |>
+  filter(SurveyBlockElementSubtype == "SkipLogic") |>
+  select(-c(PrimaryAttribute, QuestionID, SurveyBlockType, SurveyBlockDescription, SurveyBlockElementType, SurveyBlockElementSubtype)) |>
+  gather_array("SkipLogicArrayIndex") |>
+  spread_values(
+    SkipLogic.SkipLogicID = jnumber(SkipLogicID),
+    SkipLogic.ChoiceLocator = jstring(ChoiceLocator),
+    SkipLogic.Condition = jstring(Condition),
+    SkipLogic.SkipToDestination = jstring(SkipToDestination),
+    SkipLogic.Locator = jstring(Locator),
+    SkipLogic.SkipToDescription = jstring(SkipToDescription),
+    SkipLogic.Description = jstring(Description),
+    SkipLogic.QuestionID = jstring(QuestionID)
+  ) |> #glimpse()
+  select(SurveyID, QuestionID = SkipLogic.QuestionID, SurveyBlockID, SurveyBlockElementNumber, SkipLogicArrayIndex, starts_with("SkipLogic.")) |>
+  left_join(
+    x = payloads_simple,
+    y = _,
+    by = join_by(SurveyID, SurveyBlockID, SurveyBlockElementNumber, QuestionID)
+  ) |>
+  mutate(
+    question_has_skip_logic = !is.na(SkipLogicArrayIndex)
+  )
 
 
