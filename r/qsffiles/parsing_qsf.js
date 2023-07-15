@@ -10,3 +10,67 @@ const less = {"SurveyEntry":{"SurveyID":"SV_eFjHq9W5eLCeJI9","SurveyName":"Long 
 
 
 
+
+const surveyEntry = bss.SurveyEntry;
+const surveyElements = bss.SurveyElements;
+
+Object.entries(surveyElements);
+
+// for (const item of Object.entries(surveyElements))
+Object.entries(surveyElements).map(item => console.log(item[1].SurveyID));
+
+Object.entries(surveyElements).map(item => [item[0], item[1].SurveyID, item[1].Element, item[1].PrimaryAttribute]);
+
+const extractSEAttrs = (item) => [item[0], item[1].SurveyID, item[1].Element, item[1].PrimaryAttribute, item[1].SecondaryAttribute, item[1].TertiaryAttribute];
+Object.entries(surveyElements).map(extractSEAttrs);
+
+//// Survey blocks is always the first element under `SurveyElements` (assumption)
+// console.log([surveyElements[0].Element, surveyElements[0].PrimaryAttribute]);
+const surveyBlocks = surveyElements[0];
+
+//// "Default" block is always first element under the `Payload` of "Survey Blocks" (assumption)
+//// "Trash" block is always second element under the `Payload` of "Survey Blocks" (assumption)
+// console.log([surveyElements[0].Element, surveyElements[0].PrimaryAttribute]);
+//// const surveyBlockDefault = surveyBlocks[0];
+// const surveyBlockTrash = surveyBlocks.Payload[1];
+// surveyElements.filter(elem => elem.Element === "BL");
+// surveyElements.filter(elem => elem.Element === "BL")[0];
+// 
+// surveyElements.filter(elem => elem.Element === "BL")[0].Payload;
+// // surveyElements.filter(elem => elem.Element === "BL").map(elem => elem.Payload)[0];
+const surveyBlockTrash = surveyElements.filter(elem => elem.Element === "BL")[0].Payload.filter(elem => elem.Type === "Trash")[0];
+const surveyBlockNonTrash = surveyElements.filter(elem => elem.Element === "BL")[0].Payload.filter(elem => elem.Type !== "Trash");
+//const surveyBlockNonTrash = surveyElements.filter(elem => elem.Element === "BL")[0].Payload.filter(elem => elem.Type !== "Trash")[0];
+
+Object.entries(surveyEntry).map(([key, value]) => console.log(`${key}: ${value}`));
+
+surveyBlockNonTrash.map(elem => Object.entries(elem).map(([key, value]) => console.log(`${key}: ${value}`)));
+
+surveyBlockNonTrash.map(elem => Object.entries(elem));//.map(([key, value]) => console.log(`${key}: ${value}`)));
+//surveyBlockNonTrash.map(elem => Object.entries(elem)).filter(elem => elem[0] === "BlockElements");
+surveyBlockNonTrash.map(elem => elem.BlockElements);
+surveyBlockNonTrash.map(elem => elem.BlockElements)[0];
+//surveyBlockNonTrash.map(elem => elem.BlockElements[0].map(el => ));
+
+
+
+// Accessed 2023-07-15: https://stackoverflow.com/questions/17781472/how-to-get-a-subset-of-a-javascript-objects-properties
+/*
+// Copied on 2023-07-15 from https://stackoverflow.com/a/56592365
+const pick = (obj, ...keys) => Object.fromEntries(
+    keys
+    .filter(key => key in obj)
+    .map(key => [key, obj[key]])
+  );
+  
+  const inclusivePick = (obj, ...keys) => Object.fromEntries(
+    keys.map(key => [key, obj[key]])
+  );
+  
+  const omit = (obj, ...keys) => Object.fromEntries(
+    Object.entries(obj)
+    .filter(([key]) => !keys.includes(key))
+  );
+*/
+
+
