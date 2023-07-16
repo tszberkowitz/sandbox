@@ -14,6 +14,8 @@ const less = {"SurveyEntry":{"SurveyID":"SV_eFjHq9W5eLCeJI9","SurveyName":"Long 
 const surveyEntry = bss.SurveyEntry;
 const surveyElements = bss.SurveyElements;
 
+/*
+Object.entries(surveyEntry).map(([key, value]) => console.log(`${key}: ${value}`));
 Object.entries(surveyElements);
 
 // for (const item of Object.entries(surveyElements))
@@ -23,6 +25,9 @@ Object.entries(surveyElements).map(item => [item[0], item[1].SurveyID, item[1].E
 
 const extractSEAttrs = (item) => [item[0], item[1].SurveyID, item[1].Element, item[1].PrimaryAttribute, item[1].SecondaryAttribute, item[1].TertiaryAttribute];
 Object.entries(surveyElements).map(extractSEAttrs);
+
+// surveyElements.map(elem => elem.Element === "BL");
+*/
 
 //// Survey blocks is always the first element under `SurveyElements` (assumption)
 // console.log([surveyElements[0].Element, surveyElements[0].PrimaryAttribute]);
@@ -42,7 +47,31 @@ const surveyBlockTrash = surveyElements.filter(elem => elem.Element === "BL")[0]
 const surveyBlockNonTrash = surveyElements.filter(elem => elem.Element === "BL")[0].Payload.filter(elem => elem.Type !== "Trash");
 //const surveyBlockNonTrash = surveyElements.filter(elem => elem.Element === "BL")[0].Payload.filter(elem => elem.Type !== "Trash")[0];
 
-Object.entries(surveyEntry).map(([key, value]) => console.log(`${key}: ${value}`));
+surveyElements
+  .filter(elem => elem.Element === "BL")[0]
+  .Payload
+  .filter(elem => elem.Type === "Trash")
+  .map(elem => [elem.ID, elem.Description, elem.BlockElements]);
+
+// surveyElements
+  // .filter(elem => elem.Element === "BL")[0]
+  // .Payload
+  // .filter(elem => elem.Type === "Trash")
+  // .map(elem => Object.entries(elem.BlockElements));
+
+surveyElements
+  .filter(elem => elem.Element === "BL")[0]
+  .Payload
+  .filter(elem => elem.Type === "Trash")
+  .map(elem => elem.BlockElements);
+
+surveyElements
+  .filter(elem => elem.Element === "BL")[0]
+  .Payload
+  .filter(elem => elem.Type === "Trash")
+  .map(elem => elem.BlockElements)
+  .map(elem => elem.map(el => el.QuestionID));
+
 
 surveyBlockNonTrash.map(elem => Object.entries(elem).map(([key, value]) => console.log(`${key}: ${value}`)));
 
@@ -51,6 +80,47 @@ surveyBlockNonTrash.map(elem => Object.entries(elem));//.map(([key, value]) => c
 surveyBlockNonTrash.map(elem => elem.BlockElements);
 surveyBlockNonTrash.map(elem => elem.BlockElements)[0];
 //surveyBlockNonTrash.map(elem => elem.BlockElements[0].map(el => ));
+
+const trashQuestionIDs = surveyBlockTrash
+  .BlockElements
+  .filter(elem => elem.Type === "Question")
+  .map(elem => elem.QuestionID);
+
+// new Set(trashQuestionIDs);
+// new Set(trashQuestionIDs.concat(['QID7']));
+// new Set(trashQuestionIDs.concat(['QID7', 'QID8']));
+
+const numSurveyQuestionsTotal = Number(surveyElements.filter(elem => elem.Element === "QC").map(elem => elem.SecondaryAttribute)[0]);
+// const numSurveyQuestions = numSurveyQuestionsTotal - surveyBlockTrash.BlockElements.length;
+const numSurveyQuestions = numSurveyQuestionsTotal - trashQuestionIDs.length;
+console.log(`The survey "${surveyEntry.SurveyName}" contains ${numSurveyQuestions} questions.`);
+
+const surveyQuestions = surveyElements.filter(elem => elem.Element === "SQ");
+
+const extractSEAttrs = (item) => [item[0], item[1].SurveyID, item[1].Element, item[1].PrimaryAttribute, item[1].SecondaryAttribute, item[1].TertiaryAttribute];
+Object.entries(surveyQuestions).map(extractSEAttrs);
+
+//// Get unique property names?
+// surveyQuestions.map(elem => elem.Payload);
+// surveyQuestions.map(elem => Object.entries(elem.Payload));
+// surveyQuestions.map(elem => Object.entries(elem.Payload).map(el => el[0]));
+// //surveyQuestions.map(elem => Object.entries(elem.Payload).map(el => el[0]).map(el2 => [].concat(el2))); // <-- opposite of what I wanted
+// surveyQuestions.map(elem => Object.keys(elem.Payload));  <---- correct way
+// 
+// // var surveyQuestionPayloadPropertyNames = [];
+// // surveyQuestions.map(elem => surveyQuestionPayloadPropertyNames.concat(Object.entries(elem.Payload).map(el => el[0])));
+// // surveyQuestionPayloadPropertyNames;
+// 
+// // Inspired on 2023-07-15 by https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
+// surveyQuestions.map(elem => Object.entries(elem.Payload).map(el => el[0])).reduce((accumulator, currentValue) => accumulator.concat(currentValue), []);
+const surveyQuestionPayloadPropertyNames = new Set(surveyQuestions.map(elem => Object.entries(elem.Payload).map(el => el[0])).reduce((accumulator, currentValue) => accumulator.concat(currentValue), []));
+// Array.from(surveyQuestionPayloadPropertyNames);
+// Array.from(surveyQuestionPayloadPropertyNames).join(", ");
+// Array.from(surveyQuestionPayloadPropertyNames).map(elem => `"${elem}"`).join(", ");  // holy shit this actually worked?
+const surveyQuestionPayloadPropertyNamesArray = Array.from(surveyQuestionPayloadPropertyNames);
+
+////surveyQuestions.map(elem => elem.Payload.entries());
+surveyQuestions.map(elem => Object.entries(elem.Payload));
 
 
 
