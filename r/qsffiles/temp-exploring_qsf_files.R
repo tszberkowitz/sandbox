@@ -6,13 +6,14 @@ library(jsonlite)
 library(tidyjson)
 library(stringi)
 
-setwd("C:/Users/Ted/Documents/GitHub/sandbox/r/qsffiles/QualtricsTools-master/data")
-
 # datafolder <- "C:/Users/Ted/Documents/Code/R/QualtricsTools-master/data/Sample Surveys"
-# qsf_string <- readLines(file.path(datafolder, "Better Sample Survey", "Better_Sample_Survey.qsf"), warn = FALSE)
-qsf_string <- readLines("./Sample Surveys/Better Sample Survey/Better_Sample_Survey.qsf", warn = FALSE)
-# qsf_string <- readLines("./Long_Exhaustive_Sample_Survey.qsf", warn = FALSE)
-# qsf_string <- readLines("./Sample Surveys/Many Different Question Types/Sample_Survey.qsf", warn = FALSE)
+datafolder <- "C:/Users/Ted/Documents/GitHub/sandbox/r/qsffiles/QualtricsTools-master/data/Sample Surveys"
+qsf_string <- readLines(file.path(datafolder, "Better Sample Survey", "Better_Sample_Survey.qsf"), warn = FALSE)
+
+# setwd("C:/Users/Ted/Documents/GitHub/sandbox/r/qsffiles/QualtricsTools-master/data")
+# qsf_string <- readLines("./Sample Surveys/Better Sample Survey/Better_Sample_Survey.qsf", warn = FALSE)
+# # qsf_string <- readLines("./Long_Exhaustive_Sample_Survey.qsf", warn = FALSE)
+# # qsf_string <- readLines("./Sample Surveys/Many Different Question Types/Sample_Survey.qsf", warn = FALSE)
 
 # qsf_string |>
 #   prettify() |>
@@ -234,10 +235,17 @@ for (i in seq_along(qsf_list)) {
   qsf_list[[i]][["qsf_string"]] <- readLines(qsf_files[i], warn = FALSE)
   # qsf_list[[i]][["json"]] <- jsonlite::fromJSON(txt = qsf_list[[i]][["qsf_string"]], simplifyVector = FALSE, flatten = FALSE)
   qsf_list[[i]][["json"]] <- jsonlite::fromJSON(txt = qsf_files[i], simplifyVector = FALSE, flatten = FALSE)
+  qsf_list[[i]][["schema"]] <- tidyjson::json_schema(qsf_files[i])
 }
 rm(i)
 
 glimpse(qsf_list, max.level = 2)
+
+# qsf_list
+# map(qsf_list, "schema")
+# map(qsf_list, \(x) {x[["schema"]] |> fromJSON(simplifyVector = FALSE, flatten = FALSE) |> enter_object(SurveyEntry) |> json_get() |> prettify()})
+# map(qsf_list, \(x) {x[["schema"]] |> fromJSON(flatten = TRUE) |> as_tbl_json()})# |> tibble(json = _) |> as_tbl_json("json")})
+
 
 qsf_tidy <- qsf_list[["Better_Sample_Survey"]][["filepath"]] |>
   read_json(format = "json")
@@ -275,6 +283,7 @@ survey_entry <- qsf_tidy |>
   filter(name == "SurveyElements") |>
   select(-name) |>
   gather_array("name")
+# survey_entry2 <- qsf_tidy |> gather_object() |> filter(name == "SurveyEntry") |> spread_all() #|> glimpse()
 
 survey_elements <- survey_entry |>
   select(name) |>
@@ -351,4 +360,367 @@ payloads_simple |>
     question_has_skip_logic = !is.na(SkipLogicArrayIndex)
   )
 
+
+
+
+survey_entry <- qsf_tidy |>
+  gather_object() |>
+  filter(name == "SurveyEntry") |>
+  spread_all() #|> glimpse()
+survey_elements <- qsf_tidy |>
+  enter_object(SurveyElements) |>
+  gather_array("SurveyElementsArrayIndex") |>
+  gather_object("SurveyElements")
+
+survey_elements <- qsf_tidy |>
+  enter_object(SurveyElements) |>
+  gather_array("SurveyElementsArrayIndex") |>
+  spread_values(
+    SurveyID = jstring(SurveyID),
+    Element = jstring(Element),
+    PrimaryAttribute = jstring(PrimaryAttribute),
+    SecondaryAttribute = jstring(SecondaryAttribute),
+    TertiaryAttribute = jstring(TertiaryAttribute)
+  ) #|>
+  # enter_object(Payload)
+survey_elements
+
+# ### NB: This implicitly drops all objects that do not have a "Payload" property. (TSZB, 2023-07-16)
+# survey_elements |> enter_object(Payload)
+
+
+x <- json_structure(qsf_tidy)
+dim(x)
+glimpse(x)
+
+x_survey_entry <- x |>
+  filter(name == "SurveyEntry", level == 1L) |>
+  as_tibble() |>
+  select(parent.id = child.id) |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json")
+
+x_survey_entry |>
+  select(-c(parent.id, level, child.id, seq, length))
+
+
+x_survey_elements <- x |>
+  filter(name == "SurveyElements", level == 1L) |>
+  as_tibble() |>
+  select(parent.id = child.id) |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json")
+
+table(x_survey_elements$length, useNA = "ifany")
+
+xse <- x_survey_elements |>
+  as_tibble() |>
+  select(parent.id = child.id) |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json") |>
+  mutate(
+    parent.id.order = type.convert(stri_extract_last_regex(str = parent.id, pattern = "(\\d+)"), as.is = TRUE)
+  ) |>
+  # arrange(document.id, level, index)
+  arrange(document.id, parent.id.order, level, index)
+xse
+table(xse$type, useNA = "ifany")
+table(xse$name, useNA = "ifany")
+table(xse$length, useNA = "ifany")
+
+filter(xse, name == "Payload")
+filter(xse, length > 1L)
+
+xse1 <- xse |>
+  filter(name != "Payload")
+xse2 <- xse |>
+  filter(
+    name == "Payload",
+    # length > 0L
+    type != "null"
+  ) |>
+  select(-name)
+
+xse1
+xse1 |>
+  # as_tibble() |>
+  filter(type != "null") |>
+  # json_get_column("json") |>
+  select(document.id, index, name)
+
+xse1 |>
+  # select(document.id, parent.id, index, name) |>
+  select(document.id, parent.id, name) |>
+  json_get_column("json") |>
+  as_tibble() |>
+  pivot_wider(
+    # names_from = c(name, index),
+    # names_sep = "_",
+    names_from = name,
+    # names_from = index,
+    # names_prefix = "index_",
+    values_from = json,
+    values_fn = \(x) {coalesce(unlist(x), NA)}
+  )
+
+
+
+
+
+x <- json_structure(qsf_tidy)
+x_survey_elements_nonpayloads <- x |>
+  filter(name == "SurveyElements", level == 1L) |>
+  as_tibble() |>
+  select(parent.id = child.id) |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tibble() |>
+  select(parent.id = child.id) |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json") |>
+  mutate(
+    parent.id.order = type.convert(stri_extract_last_regex(str = parent.id, pattern = "(\\d+)"), as.is = TRUE)
+  ) |>
+  # arrange(document.id, level, index)
+  arrange(document.id, parent.id.order, level, index) |>
+  json_get_column("json") |>
+  as_tibble() |>
+  mutate(has_payload = max(name == "Payload" & type != "null"), .by = c(document.id, parent.id)) |>
+  as_tbl_json("json") |>
+  filter(name != "Payload") |>
+  select(document.id, parent.id, name, has_payload) |>
+  json_get_column("json") |>
+  as_tibble() |>
+  pivot_wider(
+    names_from = name,
+    values_from = json,
+    values_fn = \(x) {coalesce(unlist(x), NA)}
+  )
+x_survey_elements_nonpayloads
+
+select(x_survey_elements_nonpayloads, Element, PrimaryAttribute)
+
+
+xse2
+table(xse2$type, useNA = "ifany")
+count(xse2, type, .drop = FALSE)
+
+xse2 |>
+  filter(type == "array") |>
+  gather_array() |> json_get()
+
+xse2$seq
+
+temp <- xse2 |>
+  json_get_column("json") |>
+  as_tibble() |>
+  inner_join(
+    select(x_survey_elements_nonpayloads, parent.id, Element),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json")
+temp
+count(temp, Element)
+
+temp |>
+  # filter(Element == "BL")
+  filter(Element == "SQ")
+
+temp |>
+  filter(Element == "BL") |>
+  gather_array()
+
+temp |>
+  filter(Element == "BL") |>
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    x |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json") |>
+  # count(type)
+  # count(length)
+  filter(type == "string") |>
+  # select(-c(type, length))
+  select(document.id, parent.id, name) |>
+  json_get_column("json") |>
+  as_tibble() |>
+  pivot_wider(
+    names_from = name,
+    values_from = json,
+    values_fn = \(x) {coalesce(unlist(x), NA)}
+  )
+
+temp |>
+  filter(Element == "BL") |>
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    x |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json") |>
+  # count(type)
+  # count(length)
+  filter(type == "array") |>
+  # select(-type) |>
+  # gather_array() |>
+  # # count(name)
+  # # count(length)
+  # gather_object("BlockElement") |>
+  # count(BlockElement)
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    # x |> json_get_column("json") |> as_tibble(),
+    x |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  # as_tbl_json("json") |>
+  # # count(name)
+  # # count(type)
+  # count(length)
+  select(parent.id = child.id) |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json") |>
+  # count(type)
+  # count(name)
+  # count(type, name)
+  filter(type != "array") |>
+  select(document.id, parent.id, name) |>
+  json_get_column("json") |>
+  as_tibble() |>
+  pivot_wider(
+    names_from = name,
+    values_from = json,
+    values_fn = \(x) {coalesce(unlist(x), NA)}
+  )
+
+
+
+temp |>
+  filter(Element == "BL") |>
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    x |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json") |>
+  # count(type)
+  # count(length)
+  filter(type == "array") |>
+  # select(-type) |>
+  # gather_array() |>
+  # # count(name)
+  # # count(length)
+  # gather_object("BlockElement") |>
+  # count(BlockElement)
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    # x |> json_get_column("json") |> as_tibble(),
+    x |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  # as_tbl_json("json") |>
+  # # count(name)
+  # # count(type)
+  # count(length)
+  select(parent.id = child.id) |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json") |>
+  # count(type)
+  # count(name)
+  # count(type, name)
+  filter(type == "array") |>
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json")
+
+
+
+temp1 <- temp |>
+  filter(Element == "BL") |>
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    x |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    x |> json_get_column("json") |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  as_tbl_json("json") |>
+  filter(type == "array") |>
+  select(parent.id = child.id) |>
+  as_tibble() |>
+  inner_join(
+    x |> as_tibble(),
+    by = "parent.id"
+  ) |>
+  pull(child.id)
+
+x |>
+  filter(level > 7) |>
+  mutate(
+    tempvar = stri_extract_first_regex(
+      str = parent.id,
+      pattern = "(\\d+\\.){7}"
+    )
+  ) |>
+  filter(tempvar %in% paste0(temp1, "."))
+
+str_split_i("a.b.c.d.e.f.g.h.i.j", "\\.", -1:3)
+
+stri_extract_first_regex("a.b.c.d.e.f.g.h.i.j", "(\\w+\\.){7}")
+
+
+qsf_tidy |> json_schema() |> prettify()
 
