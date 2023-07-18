@@ -119,6 +119,9 @@ const surveyQuestionPayloadPropertyNames = new Set(surveyQuestions.map(elem => O
 // Array.from(surveyQuestionPayloadPropertyNames).map(elem => `"${elem}"`).join(", ");  // holy shit this actually worked?
 const surveyQuestionPayloadPropertyNamesArray = Array.from(surveyQuestionPayloadPropertyNames);
 
+console.log(surveyQuestionPayloadPropertyNames);
+console.log(surveyQuestionPayloadPropertyNamesArray);
+
 ////surveyQuestions.map(elem => elem.Payload.entries());
 surveyQuestions.map(elem => Object.entries(elem.Payload));
 
