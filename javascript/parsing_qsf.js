@@ -126,18 +126,19 @@ console.log(Object.entries(surveyQuestions).map(extractSEAttrs));
 // // Inspired on 2023-07-15 by https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
 // surveyQuestions.map(elem => Object.entries(elem.Payload).map(el => el[0])).reduce((accumulator, currentValue) => accumulator.concat(currentValue), []);
 const surveyQuestionPayloadPropertyNames = new Set(surveyQuestions.map(elem => Object.entries(elem.Payload).map(el => el[0])).reduce((accumulator, currentValue) => accumulator.concat(currentValue), []));
-// Array.from(surveyQuestionPayloadPropertyNames);
-// Array.from(surveyQuestionPayloadPropertyNames).join(", ");
-Array.from(surveyQuestionPayloadPropertyNames).map(elem => `"${elem}"`).join(", ");  // holy shit this actually worked?
+// console.log(Array.from(surveyQuestionPayloadPropertyNames));
+// console.log(Array.from(surveyQuestionPayloadPropertyNames).join(", "));
+// console.log(Array.from(surveyQuestionPayloadPropertyNames).map(elem => `"${elem}"`).join(", "));  // holy shit this actually worked?
 const surveyQuestionPayloadPropertyNamesArray = Array.from(surveyQuestionPayloadPropertyNames);
 
 console.log(surveyQuestionPayloadPropertyNames);
 console.log(surveyQuestionPayloadPropertyNamesArray);
 
 ////surveyQuestions.map(elem => elem.Payload.entries());
-surveyQuestions.map(elem => Object.entries(elem.Payload));
+console.log(surveyQuestions.map(elem => Object.entries(elem.Payload)));
 
-
+console.log(surveyElements.map(elem => elem.Element));
+console.log(surveyElements.filter(elem => elem.Element === "BL")[0].Payload);
 
 // Accessed 2023-07-15: https://stackoverflow.com/questions/17781472/how-to-get-a-subset-of-a-javascript-objects-properties
 /*
