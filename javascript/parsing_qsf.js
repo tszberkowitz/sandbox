@@ -196,9 +196,16 @@ let jd = [bss, mdqt, less, cc, logic];
 let surveyEntry = jd.map(elem => elem.SurveyEntry);
 let surveyElements = jd.map(elem => elem.SurveyElements);
 
+console.log(Object.keys(surveyEntry[0]));
+console.log(surveyEntry.flatMap(elem => Object.keys(elem)));
+let surveyEntryNames = new Set(surveyEntry.flatMap(elem => Object.keys(elem)));
+
 // let blocks = surveyElements.map(elem => elem.filter(elem2 => elem2.Element === "BL"));
 // let blocks = surveyElements.flatMap(elem => elem.filter(elem2 => elem2.Element === "BL"));
 let blocks = surveyElements.flatMap(elem => elem.filter(elem2 => elem2.Element === "BL").map(({Element, SecondaryAttribute, TertiaryAttribute, ...keepAttrs}) => keepAttrs));
-// blocks.map(block => block.Payload.map(p => Object.entries(p)));
 
+console.log(blocks);
+console.log(blocks.map(block => block.Payload.map(p => Object.entries(p))));
+
+// console.log(blocks.map(elem => ));
 
