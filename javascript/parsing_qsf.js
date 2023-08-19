@@ -12,13 +12,14 @@ const less = {"SurveyEntry":{"SurveyID":"SV_eFjHq9W5eLCeJI9","SurveyName":"Long 
 
 
 
-
-const surveyEntry = bss.SurveyEntry;
-const surveyElements = bss.SurveyElements;
-// const surveyEntry = mdqt.SurveyEntry;
-// const surveyElements = mdqt.SurveyElements;
-// const surveyEntry = less.SurveyEntry;
-// const surveyElements = less.SurveyElements;
+// let surveyEntry = bss.SurveyEntry;
+// let surveyElements = bss.SurveyElements;
+// let surveyEntry = mdqt.SurveyEntry;
+// let surveyElements = mdqt.SurveyElements;
+// let surveyEntry = less.SurveyEntry;
+// let surveyElements = less.SurveyElements;
+let surveyEntry = bss.SurveyEntry;
+let surveyElements = bss.SurveyElements;
 
 console.log(surveyEntry.SurveyName);
 
@@ -39,21 +40,21 @@ Object.entries(surveyElements).map(extractSEAttrs);
 
 //// Survey blocks is always the first element under `SurveyElements` (assumption)
 // console.log([surveyElements[0].Element, surveyElements[0].PrimaryAttribute]);
-const surveyBlocks = surveyElements[0];
+let surveyBlocks = surveyElements[0];
 
 //// "Default" block is always first element under the `Payload` of "Survey Blocks" (assumption)
 //// "Trash" block is always second element under the `Payload` of "Survey Blocks" (assumption)
 // console.log([surveyElements[0].Element, surveyElements[0].PrimaryAttribute]);
-//// const surveyBlockDefault = surveyBlocks[0];
-// const surveyBlockTrash = surveyBlocks.Payload[1];
+//// let surveyBlockDefault = surveyBlocks[0];
+// let surveyBlockTrash = surveyBlocks.Payload[1];
 // surveyElements.filter(elem => elem.Element === "BL");
 // surveyElements.filter(elem => elem.Element === "BL")[0];
 // 
 // surveyElements.filter(elem => elem.Element === "BL")[0].Payload;
 // // surveyElements.filter(elem => elem.Element === "BL").map(elem => elem.Payload)[0];
-const surveyBlockTrash = surveyElements.filter(elem => elem.Element === "BL")[0].Payload.filter(elem => elem.Type === "Trash")[0];
-const surveyBlockNonTrash = surveyElements.filter(elem => elem.Element === "BL")[0].Payload.filter(elem => elem.Type !== "Trash");
-//const surveyBlockNonTrash = surveyElements.filter(elem => elem.Element === "BL")[0].Payload.filter(elem => elem.Type !== "Trash")[0];
+let surveyBlockTrash = surveyElements.filter(elem => elem.Element === "BL")[0].Payload.filter(elem => elem.Type === "Trash")[0];
+let surveyBlockNonTrash = surveyElements.filter(elem => elem.Element === "BL")[0].Payload.filter(elem => elem.Type !== "Trash");
+// let surveyBlockNonTrash = surveyElements.filter(elem => elem.Element === "BL")[0].Payload.filter(elem => elem.Type !== "Trash")[0];
 
 console.log(surveyElements.filter(elem => elem.Element === "BL"));
 console.log(surveyElements.filter(elem => elem.Element === "BL")[0]);
@@ -93,7 +94,7 @@ surveyBlockNonTrash.map(elem => elem.BlockElements);
 surveyBlockNonTrash.map(elem => elem.BlockElements)[0];
 //surveyBlockNonTrash.map(elem => elem.BlockElements[0].map(el => ));
 
-const trashQuestionIDs = surveyBlockTrash
+let trashQuestionIDs = surveyBlockTrash
   .BlockElements
   .filter(elem => elem.Type === "Question")
   .map(elem => elem.QuestionID);
@@ -102,14 +103,14 @@ const trashQuestionIDs = surveyBlockTrash
 // new Set(trashQuestionIDs.concat(['QID7']));
 // new Set(trashQuestionIDs.concat(['QID7', 'QID8']));
 
-const numSurveyQuestionsTotal = Number(surveyElements.filter(elem => elem.Element === "QC").map(elem => elem.SecondaryAttribute)[0]);
-// const numSurveyQuestions = numSurveyQuestionsTotal - surveyBlockTrash.BlockElements.length;
-const numSurveyQuestions = numSurveyQuestionsTotal - trashQuestionIDs.length;
+let numSurveyQuestionsTotal = Number(surveyElements.filter(elem => elem.Element === "QC").map(elem => elem.SecondaryAttribute)[0]);
+// let numSurveyQuestions = numSurveyQuestionsTotal - surveyBlockTrash.BlockElements.length;
+let numSurveyQuestions = numSurveyQuestionsTotal - trashQuestionIDs.length;
 console.log(`The survey "${surveyEntry.SurveyName}" contains ${numSurveyQuestions} questions.`);
 
-const surveyQuestions = surveyElements.filter(elem => elem.Element === "SQ");
+let surveyQuestions = surveyElements.filter(elem => elem.Element === "SQ");
 
-const extractSEAttrs = (item) => [item[0], item[1].SurveyID, item[1].Element, item[1].PrimaryAttribute, item[1].SecondaryAttribute, item[1].TertiaryAttribute];
+let extractSEAttrs = (item) => [item[0], item[1].SurveyID, item[1].Element, item[1].PrimaryAttribute, item[1].SecondaryAttribute, item[1].TertiaryAttribute];
 console.log(Object.entries(surveyQuestions).map(extractSEAttrs));
 
 //// Get unique property names?
@@ -125,11 +126,11 @@ console.log(Object.entries(surveyQuestions).map(extractSEAttrs));
 // 
 // // Inspired on 2023-07-15 by https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
 // surveyQuestions.map(elem => Object.entries(elem.Payload).map(el => el[0])).reduce((accumulator, currentValue) => accumulator.concat(currentValue), []);
-const surveyQuestionPayloadPropertyNames = new Set(surveyQuestions.map(elem => Object.entries(elem.Payload).map(el => el[0])).reduce((accumulator, currentValue) => accumulator.concat(currentValue), []));
+let surveyQuestionPayloadPropertyNames = new Set(surveyQuestions.map(elem => Object.entries(elem.Payload).map(el => el[0])).reduce((accumulator, currentValue) => accumulator.concat(currentValue), []));
 // console.log(Array.from(surveyQuestionPayloadPropertyNames));
 // console.log(Array.from(surveyQuestionPayloadPropertyNames).join(", "));
 // console.log(Array.from(surveyQuestionPayloadPropertyNames).map(elem => `"${elem}"`).join(", "));  // holy shit this actually worked?
-const surveyQuestionPayloadPropertyNamesArray = Array.from(surveyQuestionPayloadPropertyNames);
+let surveyQuestionPayloadPropertyNamesArray = Array.from(surveyQuestionPayloadPropertyNames);
 
 console.log(surveyQuestionPayloadPropertyNames);
 console.log(surveyQuestionPayloadPropertyNamesArray);
@@ -165,6 +166,35 @@ const pick = (obj, ...keys) => Object.fromEntries(
 console.log(surveyElements);
 surveyElements.map(elem => elem.Element);
 console.log(Object.entries(surveyElements).filter(elem => elem.Element === "SQ"));
+
+
+let surveyNotes = bss.SurveyElements.filter(elem => elem.Element === "NT");
+// surveyNotes.map(elem => {SurveyID: elem.SurveyID, NoteID: elem.Payload.ID, ParentID: elem.Payload.ParentID, NotesArray: elem.Payload.Notes});
+surveyNotes.map(elem => elem.Payload.Notes);
+// surveyNotes.map(elem => elem.Payload.Notes.map(elem2 => elem2[0]));
+surveyNotes.map(elem => Object.entries(elem.Payload.Notes));
+surveyNotes.flatMap(elem => Object.entries(elem.Payload.Notes));
+surveyNotes.map(elem => elem.Payload.Notes);
+surveyNotes.flatMap(elem => elem.Payload.Notes);
+
+
+
+
+let flows = surveyElements.filter(elem => elem.Element === "FL");
+
+
+
+
+
+
+// let jd = {bss, mdqt, less};
+let jd = [bss, mdqt, less];
+let surveyEntry = jd.map(elem => elem.SurveyEntry);
+let surveyElements = jd.map(elem => elem.SurveyElements);
+
+// let blocks = surveyElements.map(elem => elem.filter(elem2 => elem2.Element === "BL"));
+let blocks = surveyElements.flatMap(elem => elem.filter(elem2 => elem2.Element === "BL"));
+let blocks = surveyElements.flatMap(elem => elem.filter(elem2 => elem2.Element === "BL").map(({Element, SecondaryAttribute, TertiaryAttribute, ...keepAttrs}) => keepAttrs));
 
 
 
